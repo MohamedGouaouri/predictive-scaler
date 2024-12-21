@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: rabbitmq
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: guest
+  #     RABBITMQ_DEFAULT_PASS: guest
+  #   network_mode: host
+
+  istio-agent:
+    restart: always
+    build:
+      context: ~/Documents/Study/Phd/playgrounds/cc_project/istio-agent
+      dockerfile: ~/Documents/Study/Phd/playgrounds/cc_project/istio-agent/Dockerfile
+    image: istio-agent
+    container_name: istio-agent
+    environment:
+      KIALI_URL: http://127.0.0.1:20001
+      QUEUE_URL: amqp://127.0.0.1
+      QUEUE_NAME: scaler
+      GRAPH_COLLECTION_PERIOD: 15
+      KubeConfig: /config/kubeconfig
+    volumes:
+      - "~/.kube/config:/tmp/kubeconfig"
+      - "~/.minikube/ca.crt:/config/ca.crt"
+      - "~/.minikube/profiles/minikube/client.crt:/config/client.crt"
+      - "~/.minikube/profiles/minikube/client.key:/config/client.key"
+    # depends_on:
+    #   - rabbitmq
+    network_mode: host
+    entrypoint:
+      - "/bin/sh"
+      - "-c"
+      - "/app/config-transformer.sh && sleep 10 && ./main"
+
+  # data-collector:
+  #   restart: always
+  #   build:
+  #     context: ~/Documents/Study/Phd/playgrounds/cc_project/data-collector
+  #     dockerfile: ~/Documents/Study/Phd/playgrounds/cc_project/data-collector/Dockerfile
+  #   image: data-collector
+  #   container_name: data-collector
+  #   environment:
+  #     QUEUE_URL: 127.0.0.1 
+  #     QUEUE_NAME: scaler
+  #   depends_on:
+  #     # - rabbitmq
+  #     - istio-agent
+  #   network_mode: host
+
+    # entrypoint:
+    #   - "/bin/sh"
+    #   - "-c"
+    #   - "sleep 10 && python app.py"
